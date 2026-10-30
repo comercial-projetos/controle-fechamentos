@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle de Fechamentos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{--pri:#095550;--pri2:#0b6b65;--ink:#0b3b38;--txt:#1c2b2b;--mut:#5b6f6e;--bd:#e2ecea;--bd2:#d5e2e1;--bg:#f2f6f6;--soft:#eef5f4}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif}
+button,input,select,textarea{font-family:inherit}
+input[type=checkbox]{accent-color:var(--pri);width:15px;height:15px}
+.b{background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:10px;padding:0 14px;height:36px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.b:hover{background:#e3eeed}
+.b.p{background:var(--pri);border-color:var(--pri);color:#fff}.b.p:hover{background:var(--pri2)}
+.b.d{background:#b91c1c;border-color:#b91c1c;color:#fff}.b.d:hover{background:#991b1b}
+.b.sm{height:28px;padding:0 10px;font-size:12px;border-radius:8px}
+.b.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.i{background:#fff;color:var(--txt);border:1px solid var(--bd2);border-radius:10px;padding:0 12px;height:36px;font-size:13px;width:100%}
+textarea.i{height:auto;min-height:70px;padding:8px 12px;resize:vertical}
+.i:focus,.b:focus-visible{outline:2px solid #9ec2bf;outline-offset:1px}
+.ib{background:var(--soft);border:0;color:var(--pri);border-radius:9px;width:30px;height:30px;cursor:pointer;font-size:14px;flex:none}
+.ib:hover{background:var(--pri);color:#fff}
+.ib.x:hover{background:#b91c1c}
+.c{padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.r{transition:background .15s}.r:hover{background:#f3f9f8}
+
+header{display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between;background:#fff;border-bottom:1px solid var(--bd);padding:14px 28px;box-shadow:0 1px 8px rgba(9,85,80,.06);position:sticky;top:0;z-index:5}
+.logo{width:42px;height:42px;border-radius:13px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none}
+h1{margin:0;color:var(--ink);font-size:19px;font-weight:700}
+.sub{font-size:12px;color:var(--mut)}
+.tabs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:14px}
+.tab{border:0;background:none;height:36px;padding:0 16px;border-radius:10px;font:600 13px Inter,system-ui,sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px}
+.tab:hover{background:#e3eeed}
+.tab.on{background:#fff;color:var(--pri);box-shadow:0 1px 4px rgba(9,85,80,.15)}
+.tab .n{background:#dcefed;color:var(--pri);border-radius:99px;font-size:11px;padding:1px 7px}
+.comp{display:flex;align-items:center;gap:4px;background:var(--soft);padding:4px;border-radius:14px}
+
+main{padding:22px 28px 28px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.kpi{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:16px 18px;box-shadow:0 2px 14px rgba(9,85,80,.07);display:flex;align-items:center;gap:14px}
+.kpi .ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:none}
+.kpi .l{font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--mut)}
+.kpi .v{font-size:30px;font-weight:700;line-height:1.1;color:var(--ink)}
+.bar{height:6px;border-radius:99px;background:#e3eeed;overflow:hidden}.bar>div{height:6px;border-radius:99px;background:var(--pri)}
+.tool{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:16px;padding:10px 12px}
+.tool .i{width:auto}
+.grow{flex:1}
+.tbl{border:1px solid var(--bd);border-radius:16px;overflow:auto;max-height:calc(100vh - 330px);min-height:300px;background:#fff;box-shadow:0 4px 22px rgba(9,85,80,.09)}
+.th .c{white-space:nowrap;overflow:visible;text-overflow:clip;font-size:11px}
+.th{position:sticky;top:0;z-index:2;display:grid;align-items:center;min-height:48px;padding:6px 0;background:var(--pri);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em}
+.tr{display:grid;align-items:center;min-height:48px}
+.row{border-bottom:1px solid #edf3f2}
+.pill{text-align:center;font-size:11px;font-weight:700;border-radius:999px;padding:5px 0}
+.st-RECEBIDO{background:#1f9d57;color:#fff}.st-PENDENTE{background:#f5c542;color:#2b2100}.st-ATRASADO{background:#dc4b4b;color:#fff}
+.tag{display:inline-block;font-size:11px;font-weight:600;border-radius:99px;padding:3px 9px;background:#dcefed;color:var(--pri)}
+.tag.off{background:#eceff0;color:#6b7f7e}
+.det{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:12px 16px 16px 56px;background:#f6faf9;font-size:13px}
+.det h4{margin:0;color:var(--pri);font-size:11px;font-weight:700}
+.det h4+div{margin-bottom:8px}
+.empty{padding:32px;text-align:center;color:var(--mut)}
+.muted{color:var(--mut)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:16px 18px;box-shadow:0 2px 14px rgba(9,85,80,.07);display:flex;flex-direction:column;gap:12px}
+.av{width:42px;height:42px;border-radius:50%;background:#dcefed;color:var(--pri);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.stats div{background:#f6faf9;border-radius:10px;padding:6px 2px}
+.stats b{display:block;font-size:18px;color:var(--ink)}
+.stats span{font-size:10px;font-weight:600;color:var(--mut);letter-spacing:.04em}
+.ov{position:fixed;inset:0;background:rgba(9,60,56,.45);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.dlg{background:#fff;border:1px solid #b9cccb;border-radius:18px;box-shadow:0 20px 50px rgba(9,60,56,.25);padding:24px;width:600px;max-width:100%;max-height:100%;overflow:auto}
+.dlg h2{margin:0 0 14px;font-size:16px;color:var(--ink)}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fg label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--pri);font-weight:600}
+.fg label.full{grid-column:1/-1}
+.fg label.chk{flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--txt)}
+.hint{font-weight:400;color:var(--mut);font-size:11px}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+#toast{position:fixed;bottom:16px;right:16px;background:var(--pri);color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;z-index:30;display:none}
+@media (max-width:700px){header,main{padding-left:16px;padding-right:16px}.det{grid-template-columns:1fr;padding-left:16px}.fg{grid-template-columns:1fr}.tabs{order:3;width:100%;overflow:auto}}
+.lnk{background:none;border:0;color:#095550;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;padding:0;text-decoration:underline;text-decoration-color:#9ec2bf;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mode{font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.mode.sh{background:#d9f2e3;color:#15803d}.mode.lc{background:#fbefc8;color:#8a5a00}
+body.ro .w{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo" aria-hidden="true">CF</div>
+    <div><h1>Controle de Fechamentos</h1><div class="sub" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">Recebimento mensal de arquivos de clientes <span id="mode" class="mode"></span></div></div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="comp">
+    <button class="b" data-a="prev" aria-label="Competência anterior" style="width:36px;padding:0;justify-content:center">‹</button>
+    <select class="i" id="mes" aria-label="Mês" style="font-weight:600;width:auto"></select>
+    <input class="i" id="ano" type="number" aria-label="Ano" min="2000" max="2100" style="width:80px;font-weight:600">
+    <button class="b" data-a="next" aria-label="Próxima competência" style="width:36px;padding:0;justify-content:center">›</button>
+  </div>
+</header>
+<main id="main"></main>
+<div id="modal"></div>
+<div id="toast"></div>
+<input type="file" id="restoreFile" accept=".json" hidden>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script>
+(() => {
+'use strict';
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const pad = n => String(n).padStart(2, '0');
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const fmt = d => d ? d.split('-').reverse().join('/') : '—';
+const addDays = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
+const utc = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+const diffDays = (a, b) => Math.round((utc(b) - utc(a)) / 864e5);
+const cmp = (a, b) => String(a).localeCompare(String(b), 'pt-BR', {numeric: true, sensitivity: 'base'});
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const initials = n => String(n || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+const safeId = (id, p) => { const s = String(id || '').replace(/[^A-Za-z0-9_\-~:@+]/g, '_').slice(0, 150); return s && s !== '.' && s !== '..' ? s : uid(p); };
+const MESES = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+let toastT;
+function toast(t, ms) { const el = $('#toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => el.style.display = 'none', ms || 2800); }
+function dl(name, data, type) {
+  const blob = data instanceof Blob ? data : new Blob([data], {type});
+  const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 3000);
+}
+const csvq = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+const csv = (name, head, lines) => dl(name, '﻿' + [head].concat(lines).map(l => l.map(csvq).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+
+/* ---------- estado ---------- */
+const now = new Date();
+const S = {
+  view: 'fech', comp: now.getFullYear() + '-' + pad(now.getMonth() + 1),
+  q: '', fs: '', fa: '', exp: {}, sel: {},
+  cq: '', cAtivo: '1', cAn: '',
+  rq: '', rTipo: '',
+  recs: [], clientes: [], resp: [], loading: true
+};
+/* ---------- Supabase ---------- */
+const CFG = window.CF_CONFIG || {};
+let SB = null, ME = null, CH = null;
+const RO = false;
+const TBL = 'registros', BUCKET = 'anexos';
+const COL = {recs: 'fechamentos', clientes: 'clientes', resp: 'responsaveis'};
+const KIND = {fechamentos: 'recs', clientes: 'clientes', responsaveis: 'resp'};
+
+function dbErr(e) {
+  const m = (e && (e.message || e.code)) || 'erro';
+  toast('Falha ao salvar: ' + m, 6000);
+}
+async function put(kind, obj) {
+  const arr = S[kind], i = arr.findIndex(x => x.id === obj.id);
+  if (i >= 0) arr[i] = obj; else arr.push(obj);
+  const {error} = await SB.from(TBL).upsert({colecao: COL[kind], id: obj.id, data: obj, updated_by: ME});
+  if (error) { dbErr(error); return false; }
+  return true;
+}
+async function remove(kind, id) {
+  S[kind] = S[kind].filter(x => x.id !== id);
+  const {error} = await SB.from(TBL).delete().match({colecao: COL[kind], id});
+  if (error) dbErr(error);
+}
+async function putMany(kind, list) {
+  list.forEach(o => { const arr = S[kind], i = arr.findIndex(x => x.id === o.id); if (i >= 0) arr[i] = o; else arr.push(o); });
+  for (let i = 0; i < list.length; i += 200) {
+    const {error} = await SB.from(TBL).upsert(list.slice(i, i + 200).map(o => ({colecao: COL[kind], id: o.id, data: o, updated_by: ME})));
+    if (error) { dbErr(error); return false; }
+  }
+  return true;
+}
+const hist = t => ME ? {d: new Date().toISOString(), t, u: ME} : {d: new Date().toISOString(), t};
+const withHist = (r, t) => t ? {...r, hist: [hist(t), ...(r.hist || [])]} : r;
+function upd(id, fn, t) { const r = S.recs.find(x => x.id === id); if (!r) return; return put('recs', withHist(fn(r), t)); }
+const quem = u => u && String(u).includes('@') ? String(u).split('@')[0] : (u || '');
+
+const status = (r, T) => r.rec ? 'RECEBIDO' : (r.prazo && r.prazo < T ? 'ATRASADO' : 'PENDENTE');
+const analistas = (incl) => { const s = S.resp.filter(p => p.ativo !== false && p.tipo !== 'Comercial').map(p => p.nome); if (incl && !s.includes(incl)) s.push(incl); return s.sort(cmp); };
+const comerciais = (incl) => { const s = S.resp.filter(p => p.ativo !== false && p.tipo !== 'Analista').map(p => p.nome); if (incl && !s.includes(incl)) s.push(incl); return s.sort(cmp); };
+const cliOf = r => S.clientes.find(c => c.id === r.clienteId) || S.clientes.find(c => norm(c.nome) === norm(r.cliente));
+function datasPadrao(c, comp) {
+  if (!c || !c.dia) return {fech: '', prazo: ''};
+  const [y, m] = comp.split('-').map(Number), last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const fech = comp + '-' + pad(Math.min(+c.dia, last));
+  return {fech, prazo: addDays(fech, +c.prazoDias || 0)};
+}
+
+/* ---------- anexos (Supabase Storage) ---------- */
+async function saveFile(recId, f) {
+  if (f.size > 45 * 1024 * 1024) throw new Error('arquivo acima de 45 MB');
+  const path = recId + '/' + Date.now() + '_' + f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9._-]/g, '_');
+  const {error} = await SB.storage.from(BUCKET).upload(path, f, {contentType: f.type || 'application/octet-stream', upsert: false});
+  if (error) throw error;
+  return {id: path, name: f.name, size: f.size, s: 1};
+}
+async function loadFile(f) {
+  if (!f.s) return null;
+  const {data, error} = await SB.storage.from(BUCKET).download(f.id);
+  if (error) return null;
+  return data;
+}
+async function dropFile(f) { if (f.s) { try { await SB.storage.from(BUCKET).remove([f.id]); } catch (e) {} } }
+
+/* ---------- migração de dados antigos ---------- */
+function derive(recs, cl, resp) {
+  if (!Array.isArray(resp)) {
+    const m = new Map();
+    recs.forEach(r => { if (r.analista) m.set(r.analista, m.get(r.analista) === 'Comercial' ? 'Ambos' : (m.get(r.analista) || 'Analista'));
+                        if (r.comercial) m.set(r.comercial, m.has(r.comercial) && m.get(r.comercial) !== 'Comercial' ? 'Ambos' : 'Comercial'); });
+    resp = [...m].map(([nome, tipo]) => ({id: uid('p'), nome, tipo, email: '', tel: '', ativo: true}));
+  }
+  if (!Array.isArray(cl)) {
+    const m = new Map();
+    [...recs].sort((a, b) => cmp(a.comp, b.comp)).forEach(r => {
+      if (!r.cliente) return;
+      const dia = r.fech ? +r.fech.slice(8) : '', pz = r.fech && r.prazo ? Math.max(0, diffDays(r.fech, r.prazo)) : '';
+      m.set(norm(r.cliente), {id: (m.get(norm(r.cliente)) || {}).id || uid('c'), nome: r.cliente, cnpj: '', cdc: r.cdc || '', analista: r.analista || '', comercial: r.comercial || '', dia, prazoDias: pz, contato: '', email: '', tel: '', obs: '', ativo: true});
+    });
+    cl = [...m.values()];
+  }
+  cl = cl.map(c => ({...c, id: safeId(c.id, 'c')}));
+  resp = resp.map(p => ({...p, id: safeId(p.id, 'p')}));
+  recs = recs.map(r => {
+    const x = {files: [], hist: [], ...r, id: safeId(r.id, 'r')};
+    if (!x.clienteId) { const c = cl.find(c => norm(c.nome) === norm(x.cliente)); if (c) x.clienteId = c.id; }
+    return x;
+  });
+  return {recs, cl, resp};
+}
+/* ---------- render geral ---------- */
+function render() {
+  const [y, m] = S.comp.split('-');
+  $('#mes').innerHTML = MESES.map((n, i) => `<option value="${pad(i + 1)}"${pad(i + 1) === m ? ' selected' : ''}>${n}</option>`).join('');
+  $('#ano').value = y;
+  const tabs = [['fech', 'Fechamentos', S.recs.filter(r => r.comp === S.comp).length], ['cli', 'Clientes', S.clientes.length], ['resp', 'Responsáveis', S.resp.length]];
+  $('#tabs').innerHTML = tabs.map(([k, n, c]) => `<button class="tab${S.view === k ? ' on' : ''}" data-a="view" data-v="${k}">${n}<span class="n">${c}</span></button>`).join('');
+  const md = $('#mode');
+  md.className = 'mode sh';
+  md.innerHTML = `● Online${ME ? ' · ' + esc(ME) : ''} <button class="lnk" data-a="nome" style="font-size:11px;margin-left:6px">${ME ? 'trocar nome' : 'informar seu nome'}</button>`;
+  if (S.loading) { $('#main').innerHTML = '<div class="empty">Carregando dados…</div>'; return; }
+  ({fech: viewFech, cli: viewCli, resp: viewResp})[S.view]();
+}
+/* re-render quando chegam alterações de outras pessoas, sem atrapalhar quem está digitando */
+let rerT;
+function softRender() {
+  cancelAnimationFrame(rerT);
+  rerT = requestAnimationFrame(() => {
+    const a = document.activeElement;
+    if (a && a.closest && a.closest('#main') && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && !S.loading) {
+      ({fech: listFech, cli: listCli, resp: listResp})[S.view]();
+    } else render();
+  });
+}
+/* ========== FECHAMENTOS ========== */
+function curRecs() { const T = today(); return S.recs.filter(r => r.comp === S.comp).map(r => ({...r, st: status(r, T)})); }
+const ORD = {ATRASADO: 0, PENDENTE: 1, RECEBIDO: 2};
+function visRecs() {
+  const q = norm(S.q);
+  return curRecs().filter(r => (!q || norm(r.cliente).includes(q) || norm(r.cdc).includes(q)) && (!S.fa || r.analista === S.fa) && (!S.fs || r.st === S.fs))
+    .sort((a, b) => (ORD[a.st] - ORD[b.st]) || cmp(a.prazo || '9', b.prazo || '9') || cmp(a.cliente, b.cliente));
+}
+const G_F = '40px minmax(180px,1.5fr) 190px 150px 140px 128px 125px minmax(170px,2fr) 150px';
+function viewFech() {
+  const cur = curRecs(), n = x => cur.filter(r => r.st === x).length, P = cur.length ? Math.round(100 * n('RECEBIDO') / cur.length) : 0;
+  const k = (ic, bg, fg, l, v, extra = '') => `<div class="kpi"><div class="ic" style="background:${bg};color:${fg}" aria-hidden="true">${ic}</div><div style="flex:1;min-width:0"><div class="l">${l}</div><div class="v">${v}</div>${extra}</div></div>`;
+  const nomes = [...new Set(analistas().concat(cur.map(r => r.analista).filter(Boolean)))].sort(cmp);
+  const faltam = S.clientes.filter(c => c.ativo !== false && !S.recs.some(r => r.comp === S.comp && (r.clienteId === c.id || norm(r.cliente) === norm(c.nome)))).length;
+  const vazio = !S.recs.length && !S.clientes.length && !S.resp.length;
+  $('#main').innerHTML = `
+  ${vazio ? `<div class="tool" style="background:#f0f8f7;border-color:#cfe5e2;display:block;padding:16px 18px;font-size:13px;line-height:1.55">
+     <b style="color:var(--ink);font-size:14px">A base compartilhada está vazia.</b><br>
+     Para trazer o que você já tem no seu computador: abra a versão antiga do Controle de Fechamentos, clique em <b>Backup</b> para baixar o arquivo <i>backup_fechamentos.json</i>, depois volte aqui e clique em <b>Restaurar</b>.
+     <div style="margin-top:10px"><button class="b p" data-a="restore">Restaurar backup</button></div></div>` : ''}
+  <div class="kpis">
+    ${k('≡', '#dcefed', '#095550', 'TOTAL DE FECHAMENTOS', cur.length)}
+    ${k('✓', '#d9f2e3', '#15803d', 'RECEBIDOS', n('RECEBIDO'))}
+    ${k('…', '#fbefc8', '#a16207', 'PENDENTES', n('PENDENTE'))}
+    ${k('!', '#fbdcdc', '#b91c1c', 'ATRASADOS', n('ATRASADO'))}
+    ${k('%', '#dcefed', '#095550', '% RECEBIMENTO', P + '<span style="font-size:18px">%</span>', `<div class="bar" style="margin-top:6px"><div style="width:${P}%"></div></div>`)}
+  </div>
+  ${faltam && !RO ? `<div class="tool" style="background:#fffaf0;border-color:#f3e2b3"><span style="font-size:13px"><b>${faltam}</b> cliente(s) ativo(s) ainda sem fechamento em ${MESES[+S.comp.slice(5) - 1].toLowerCase()}/${S.comp.slice(0, 4)}.</span><div class="grow"></div><button class="b p" data-a="gerar">Gerar fechamentos do mês</button></div>` : ''}
+  <div class="tool">
+    <input class="i" id="q" type="search" placeholder="Pesquisar cliente ou CDC" value="${esc(S.q)}" style="width:210px" aria-label="Pesquisar">
+    <select class="i" id="fs" aria-label="Filtrar por status">
+      ${['', 'RECEBIDO', 'PENDENTE', 'ATRASADO'].map(v => `<option value="${v}"${S.fs === v ? ' selected' : ''}>${v || 'Todos os status'}</option>`).join('')}
+    </select>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      ${[''].concat(nomes).map(a => `<button class="b${S.fa === a ? ' on' : ''}" data-a="fa" data-v="${esc(a)}">${esc(a || 'Todos')}</button>`).join('')}
+    </div>
+    <div class="grow"></div>
+    <button class="b p w" data-a="novoF">+ Novo fechamento</button>
+    <button class="b w" data-a="delSel">Excluir selecionados</button>
+    <button class="b" data-a="csvF">CSV</button>
+    <button class="b" data-a="backup">Backup</button>
+    <button class="b w" data-a="restore">Restaurar</button>
+  </div>
+  <div class="tbl"><div style="min-width:1290px">
+    <div class="th" style="grid-template-columns:${G_F}">
+      <div style="text-align:center"><input type="checkbox" class="w" id="allSel" aria-label="Selecionar todos"></div>
+      <div class="c">CLIENTE</div><div class="c">ANALISTA RESPONSÁVEL</div><div class="c">DATA FECHAMENTO</div><div class="c">PRAZO DE ENVIO</div><div class="c">STATUS</div><div class="c">RECEBIMENTO</div><div class="c">OBSERVAÇÕES</div><div class="c">AÇÕES</div>
+    </div>
+    <div id="list"></div>
+  </div></div>`;
+  listFech();
+}
+function listFech() {
+  const vis = visRecs(), T = today(), ids = new Set();
+  const all = $('#allSel'); if (all) all.checked = vis.length > 0 && vis.every(r => S.sel[r.id]);
+  const compF = S.comp.split('-').reverse().join('/');
+  $('#list').innerHTML = vis.length ? vis.map(r => {
+    const c = cliOf(r), late = r.st === 'ATRASADO' ? diffDays(r.prazo, T) : 0;
+    const mail = c && c.email ? `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent('Fechamento ' + compF + ' - ' + r.cliente)}&body=${encodeURIComponent('Olá' + (c.contato ? ' ' + c.contato : '') + ',\n\nAinda não recebemos os arquivos do fechamento da competência ' + compF + ' (prazo: ' + fmt(r.prazo) + ').\nPoderia nos enviar, por favor?\n\nObrigado(a)!')}` : '';
+        return `<div class="row">
+    <div class="tr r" style="grid-template-columns:${G_F}">
+      <div style="text-align:center"><input type="checkbox" class="w" data-a="sel" data-id="${r.id}" aria-label="Selecionar"${S.sel[r.id] ? ' checked' : ''}></div>
+      <div class="c"><button data-a="exp" data-id="${r.id}" class="lnk">${esc(r.cliente)}</button></div>
+      <div class="c">${esc(r.analista || '—')}</div><div class="c">${fmt(r.fech)}</div><div class="c">${fmt(r.prazo)}</div>
+      <div style="padding:0 4px"><div class="pill st-${r.st}" title="${late ? late + ' dia(s) de atraso' : ''}">${r.st}${late ? ' · ' + late + 'd' : ''}</div></div>
+      <div class="c">${fmt(r.rec)}</div><div class="c muted">${esc(r.obs)}</div>
+      <div style="display:flex;gap:4px;padding:0 6px">
+        <button class="ib" data-a="exp" data-id="${r.id}" aria-label="Detalhes" title="Detalhes">${S.exp[r.id] ? '▴' : '▾'}</button>
+        <button class="ib w" data-a="editF" data-id="${r.id}" aria-label="Editar" title="Editar">✎</button>
+        <button class="ib w" data-a="${r.rec ? 'unrec' : 'rec'}" data-id="${r.id}" aria-label="${r.rec ? 'Desfazer recebimento' : 'Registrar recebimento'}" title="${r.rec ? 'Desfazer recebimento' : 'Registrar recebimento hoje'}">${r.rec ? '↺' : '✓'}</button>
+        <button class="ib x w" data-a="delF" data-id="${r.id}" aria-label="Excluir" title="Excluir">✕</button>
+      </div>
+    </div>
+    ${S.exp[r.id] ? `<div class="det">
+      <div>
+        <h4>CDC</h4><div>${esc(r.cdc || '—')}</div>
+        <h4>RESPONSÁVEL COMERCIAL</h4><div>${esc(r.comercial || '—')}</div>
+        <h4>CONTATO DO CLIENTE</h4><div>${c ? esc([c.contato, c.email, c.tel].filter(Boolean).join(' · ') || '—') : '—'}</div>
+        <h4>OBSERVAÇÕES</h4><div style="white-space:pre-wrap">${esc(r.obs || '—')}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${!r.rec && mail ? `<a class="b sm" href="${mail}" target="_blank" rel="noopener">✉ Cobrar por e-mail</a>` : ''}
+          ${c ? `<button class="b sm" data-a="editC" data-id="${c.id}">Ver cadastro do cliente</button>` : ''}
+        </div>
+      </div>
+      <div><h4>ARQUIVOS ANEXADOS</h4>
+        ${(r.files || []).map(f => `<div style="display:flex;gap:6px;align-items:center;margin-top:4px"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span><button class="b sm" data-a="down" data-id="${r.id}" data-f="${esc(f.id)}">Baixar</button><button class="b sm w" data-a="rmFile" data-id="${r.id}" data-f="${esc(f.id)}">Remover</button></div>`).join('') || '<div class="muted">Nenhum arquivo.</div>'}
+        <input type="file" class="w" multiple data-a="files" data-id="${r.id}" aria-label="Anexar arquivos" style="margin-top:8px;font-size:12px;color:#4a5f5e;max-width:100%"><div class="hint" style="margin-top:2px">Até 45 MB por arquivo.</div>
+      </div>
+      <div><h4>HISTÓRICO</h4>
+        ${(r.hist || []).map(h => `<div style="margin-top:4px;color:#4a5f5e"><span style="color:#6b7f7e">${new Date(h.d).toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</span> — ${esc(h.t)}${h.u ? ` <span style="color:#095550;font-weight:600">· ${esc(quem(h.u))}</span>` : ''}</div>`).join('')}
+      </div>
+    </div>` : ''}
+  </div>`; }).join('') : `<div class="empty">${S.recs.some(r => r.comp === S.comp) ? 'Nenhum fechamento corresponde aos filtros.' : 'Nenhum fechamento nesta competência.' + (S.clientes.length && !RO ? ' Use “Gerar fechamentos do mês” para criar a partir dos clientes cadastrados.' : '')}</div>`;
+}
+function formFech(r) {
+  const f = r || {id: '', comp: S.comp, clienteId: '', cliente: '', analista: '', comercial: '', fech: '', prazo: '', rec: '', cdc: '', obs: ''};
+  const cls = S.clientes.filter(c => c.ativo !== false || c.id === f.clienteId).sort((a, b) => cmp(a.nome, b.nome));
+  modal(f.id ? 'Editar fechamento' : 'Novo fechamento', [
+    {k: 'clienteId', l: 'CLIENTE', t: 'select', full: true, opts: [['', '— selecione —']].concat(cls.map(c => [c.id, c.nome])), v: f.clienteId || (cliOf(f) || {}).id || '',
+     hint: cls.length ? 'Ao escolher, os dados padrão do cadastro são preenchidos.' : 'Cadastre clientes na aba Clientes.'},
+    {k: 'comp', l: 'COMPETÊNCIA', t: 'month', v: f.comp},
+    {k: 'analista', l: 'ANALISTA RESPONSÁVEL', t: 'select', opts: [['', '—']].concat(analistas(f.analista).map(n => [n, n])), v: f.analista},
+    {k: 'comercial', l: 'RESPONSÁVEL COMERCIAL', t: 'select', opts: [['', '—']].concat(comerciais(f.comercial).map(n => [n, n])), v: f.comercial},
+    {k: 'cdc', l: 'CDC', v: f.cdc},
+    {k: 'fech', l: 'DATA DE FECHAMENTO', t: 'date', v: f.fech},
+    {k: 'prazo', l: 'PRAZO DE ENVIO', t: 'date', v: f.prazo},
+    {k: 'rec', l: 'DATA DE RECEBIMENTO', t: 'date', v: f.rec},
+    {k: 'obs', l: 'OBSERVAÇÕES', t: 'textarea', full: true, v: f.obs}
+  ], async v => {
+    const c = S.clientes.find(x => x.id === v.clienteId);
+    if (!c && !f.cliente) return toast('Selecione o cliente');
+    if (!v.comp || !v.prazo) return toast('Informe competência e prazo de envio');
+    const cliente = c ? c.nome : f.cliente;
+    if (v.clienteId && S.recs.some(x => x.id !== f.id && x.comp === v.comp && x.clienteId === v.clienteId)) return toast('Já existe fechamento deste cliente nesta competência');
+    closeModal();
+    const ok = f.id ? await upd(f.id, x => ({...x, ...v, cliente}), 'Registro editado')
+                    : await put('recs', {...v, cliente, id: uid('r'), files: [], hist: [hist('Registro criado')]});
+    render(); if (ok) toast('Fechamento salvo');
+  }, (k, val, set) => {
+    if (k === 'clienteId' || k === 'comp') {
+      const c = S.clientes.find(x => x.id === set.get('clienteId')); if (!c) return;
+      if (k === 'clienteId') { set.put('analista', c.analista); set.put('comercial', c.comercial); set.put('cdc', c.cdc); }
+      const p = datasPadrao(c, set.get('comp') || S.comp); if (p.fech) { set.put('fech', p.fech); set.put('prazo', p.prazo); }
+    }
+  });
+}
+function gerar() {
+  const alvo = S.clientes.filter(c => c.ativo !== false && !S.recs.some(r => r.comp === S.comp && (r.clienteId === c.id || norm(r.cliente) === norm(c.nome))));
+  if (!alvo.length) return toast('Todos os clientes ativos já têm fechamento nesta competência');
+  confirmBox(`Criar <b>${alvo.length}</b> fechamento(s) para ${MESES[+S.comp.slice(5) - 1].toLowerCase()}/${S.comp.slice(0, 4)} usando o dia de fechamento e o prazo padrão de cada cliente?<div class="muted" style="margin-top:8px;font-size:12px">${alvo.map(c => esc(c.nome)).join(', ')}</div>`, 'Gerar', false, async () => {
+    const novos = alvo.map(c => { const p = datasPadrao(c, S.comp); return {id: uid('r'), comp: S.comp, clienteId: c.id, cliente: c.nome, analista: c.analista || '', comercial: c.comercial || '', cdc: c.cdc || '', fech: p.fech, prazo: p.prazo, rec: '', obs: '', files: [], hist: [hist('Gerado automaticamente a partir do cadastro')]}; });
+    toast('Criando fechamentos…', 10000);
+    const ok = await putMany('recs', novos); render(); if (ok) toast(novos.length + ' fechamento(s) criado(s)');
+  });
+}
+async function addFiles(id, list) {
+  const out = [];
+  for (const f of Array.from(list || [])) {
+    toast('Enviando ' + f.name + '…', 30000);
+    try { out.push(await saveFile(id, f)); } catch (e) { toast('Falha ao anexar ' + f.name + ': ' + (e.code || e.message || 'erro'), 5000); }
+  }
+  if (out.length) { await upd(id, r => ({...r, files: [...(r.files || []), ...out]}), 'Anexou: ' + out.map(o => o.name).join(', ')); listFech(); toast('Anexo salvo'); }
+}
+async function delRecs(ids) {
+  for (const id of ids) { const r = S.recs.find(x => x.id === id); if (!r) continue; (r.files || []).forEach(dropFile); await remove('recs', id); }
+  S.sel = {};
+}
+
+/* ========== CLIENTES ========== */
+const G_C = 'minmax(180px,1.6fr) 150px 100px 190px 200px 160px 140px minmax(180px,1.4fr) 125px 100px 112px';
+function viewCli() {
+  const an = [...new Set(S.clientes.map(c => c.analista).filter(Boolean))].sort(cmp);
+  $('#main').innerHTML = `
+  <div class="tool">
+    <input class="i" id="cq" type="search" placeholder="Pesquisar nome, CNPJ, CDC, contato" value="${esc(S.cq)}" style="width:260px" aria-label="Pesquisar clientes">
+    <select class="i" id="cAtivo" aria-label="Situação">${[['1', 'Ativos'], ['0', 'Inativos'], ['', 'Todos']].map(([v, l]) => `<option value="${v}"${S.cAtivo === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+    <select class="i" id="cAn" aria-label="Analista"><option value="">Todos os analistas</option>${an.map(a => `<option${S.cAn === a ? ' selected' : ''}>${esc(a)}</option>`).join('')}</select>
+    <div class="grow"></div>
+    <button class="b p w" data-a="novoC">+ Novo cliente</button>
+    <button class="b" data-a="csvC">CSV</button>
+  </div>
+  <div class="tbl"><div style="min-width:1680px">
+    <div class="th" style="grid-template-columns:${G_C}">
+      <div class="c" style="padding-left:16px">CLIENTE</div><div class="c">CNPJ</div><div class="c">CDC</div><div class="c">ANALISTA RESPONSÁVEL</div><div class="c">RESPONSÁVEL COMERCIAL</div><div class="c">DIA DO FECHAMENTO</div><div class="c">PRAZO DE ENVIO</div><div class="c">CONTATO</div><div class="c">FECHAMENTOS</div><div class="c">SITUAÇÃO</div><div class="c">AÇÕES</div>
+    </div>
+    <div id="list"></div>
+  </div></div>`;
+  listCli();
+}
+function listCli() {
+  const q = norm(S.cq);
+  const vis = S.clientes.filter(c => (!S.cAtivo || (S.cAtivo === '1') === (c.ativo !== false)) && (!S.cAn || c.analista === S.cAn) &&
+    (!q || [c.nome, c.cnpj, c.cdc, c.contato, c.email].some(v => norm(v).includes(q)))).sort((a, b) => cmp(a.nome, b.nome));
+  $('#list').innerHTML = vis.length ? vis.map(c => {
+    const n = S.recs.filter(r => r.clienteId === c.id).length, ct = [c.contato, c.email, c.tel].filter(Boolean).join(' · ');
+    return `<div class="row"><div class="tr r" style="grid-template-columns:${G_C}">
+      <div class="c" style="padding-left:16px"><button data-a="editC" data-id="${c.id}" class="lnk">${esc(c.nome)}</button></div>
+      <div class="c">${esc(c.cnpj || '—')}</div><div class="c">${esc(c.cdc || '—')}</div><div class="c">${esc(c.analista || '—')}</div><div class="c">${esc(c.comercial || '—')}</div>
+      <div class="c">${c.dia ? 'Dia ' + c.dia : '—'}</div><div class="c">${c.prazoDias !== '' && c.prazoDias != null ? c.prazoDias + ' dia(s) após' : '—'}</div>
+      <div class="c muted" title="${esc(ct)}">${esc(ct || '—')}</div>
+      <div class="c">${n}</div>
+      <div class="c"><span class="tag${c.ativo === false ? ' off' : ''}">${c.ativo === false ? 'Inativo' : 'Ativo'}</span></div>
+      <div style="display:flex;gap:4px;padding:0 6px">
+        <button class="ib" data-a="editC" data-id="${c.id}" aria-label="${RO ? 'Ver' : 'Editar'}" title="${RO ? 'Ver' : 'Editar'}">${RO ? '👁' : '✎'}</button>
+        <button class="ib w" data-a="togC" data-id="${c.id}" aria-label="${c.ativo === false ? 'Ativar' : 'Inativar'}" title="${c.ativo === false ? 'Ativar' : 'Inativar'}">${c.ativo === false ? '▶' : '⏸'}</button>
+        <button class="ib x w" data-a="delC" data-id="${c.id}" aria-label="Excluir" title="Excluir">✕</button>
+      </div>
+    </div></div>`; }).join('') : `<div class="empty">${S.clientes.length ? 'Nenhum cliente corresponde aos filtros.' : 'Nenhum cliente cadastrado ainda.'}</div>`;
+}
+function formCli(c) {
+  const f = c || {id: '', nome: '', cnpj: '', cdc: '', analista: '', comercial: '', dia: '', prazoDias: '', contato: '', email: '', tel: '', obs: '', ativo: true};
+  modal(RO ? 'Cliente' : f.id ? 'Editar cliente' : 'Novo cliente', [
+    {k: 'nome', l: 'NOME DO CLIENTE *', full: true, v: f.nome},
+    {k: 'cnpj', l: 'CNPJ', v: f.cnpj, ph: '00.000.000/0000-00'},
+    {k: 'cdc', l: 'CDC', v: f.cdc},
+    {k: 'analista', l: 'ANALISTA RESPONSÁVEL', t: 'select', opts: [['', '—']].concat(analistas(f.analista).map(n => [n, n])), v: f.analista},
+    {k: 'comercial', l: 'RESPONSÁVEL COMERCIAL', t: 'select', opts: [['', '—']].concat(comerciais(f.comercial).map(n => [n, n])), v: f.comercial},
+    {k: 'dia', l: 'DIA DO FECHAMENTO', t: 'number', min: 1, max: 31, v: f.dia, hint: 'Dia do mês (1–31). Usado para gerar o fechamento.'},
+    {k: 'prazoDias', l: 'PRAZO DE ENVIO (DIAS APÓS)', t: 'number', min: 0, max: 60, v: f.prazoDias, hint: 'Ex.: 3 = prazo 3 dias após o fechamento.'},
+    {k: 'contato', l: 'NOME DO CONTATO', v: f.contato},
+    {k: 'email', l: 'E-MAIL', t: 'email', v: f.email},
+    {k: 'tel', l: 'TELEFONE', t: 'tel', v: f.tel},
+    {k: 'obs', l: 'OBSERVAÇÕES', t: 'textarea', full: true, v: f.obs},
+    {k: 'ativo', l: 'Cliente ativo (entra na geração mensal)', t: 'checkbox', full: true, v: f.ativo !== false}
+  ], async v => {
+    v.nome = v.nome.trim();
+    if (!v.nome) return toast('Informe o nome do cliente');
+    if (S.clientes.some(x => x.id !== f.id && norm(x.nome) === norm(v.nome))) return toast('Já existe um cliente com este nome');
+    if (v.dia && (v.dia < 1 || v.dia > 31)) return toast('Dia do fechamento deve ser entre 1 e 31');
+    v.dia = v.dia ? +v.dia : ''; v.prazoDias = v.prazoDias === '' ? '' : +v.prazoDias;
+    closeModal();
+    let ok;
+    if (f.id) {
+      ok = await put('clientes', {...S.clientes.find(x => x.id === f.id), ...v});
+      if (ok && f.nome !== v.nome) await putMany('recs', S.recs.filter(r => r.clienteId === f.id).map(r => ({...r, cliente: v.nome})));
+    } else ok = await put('clientes', {...v, id: uid('c')});
+    render(); if (ok) toast('Cliente salvo');
+  });
+}
+
+/* ========== RESPONSÁVEIS ========== */
+function viewResp() {
+  $('#main').innerHTML = `
+  <div class="tool">
+    <input class="i" id="rq" type="search" placeholder="Pesquisar responsável" value="${esc(S.rq)}" style="width:220px" aria-label="Pesquisar responsáveis">
+    <select class="i" id="rTipo" aria-label="Tipo">${[['', 'Todos os tipos'], ['Analista', 'Analistas'], ['Comercial', 'Comerciais'], ['Ambos', 'Analista + Comercial']].map(([v, l]) => `<option value="${v}"${S.rTipo === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+    <span class="muted" style="font-size:12px">Indicadores da competência ${S.comp.split('-').reverse().join('/')}</span>
+    <div class="grow"></div>
+    <button class="b p w" data-a="novoR">+ Novo responsável</button>
+    <button class="b" data-a="csvR">CSV</button>
+  </div>
+  <div id="list"></div>`;
+  listResp();
+}
+function listResp() {
+  const q = norm(S.rq), cur = curRecs();
+  const vis = S.resp.filter(p => (!q || [p.nome, p.email].some(v => norm(v).includes(q))) && (!S.rTipo || p.tipo === S.rTipo)).sort((a, b) => (a.ativo === false) - (b.ativo === false) || cmp(a.nome, b.nome));
+  $('#list').innerHTML = vis.length ? `<div class="cards">${vis.map(p => {
+    const mine = cur.filter(r => r.analista === p.nome || r.comercial === p.nome), n = x => mine.filter(r => r.st === x).length;
+    const P = mine.length ? Math.round(100 * n('RECEBIDO') / mine.length) : 0;
+    const ncl = S.clientes.filter(c => c.ativo !== false && (c.analista === p.nome || c.comercial === p.nome)).length;
+    return `<div class="card" style="${p.ativo === false ? 'opacity:.6' : ''}">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="av">${esc(initials(p.nome))}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;color:var(--ink);font-size:15px">${esc(p.nome)}</div>
+          <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap"><span class="tag">${p.tipo === 'Ambos' ? 'Analista + Comercial' : esc(p.tipo)}</span>${p.ativo === false ? '<span class="tag off">Inativo</span>' : ''}</div>
+        </div>
+        <button class="ib w" data-a="editR" data-id="${p.id}" aria-label="Editar" title="Editar">✎</button>
+        <button class="ib w" data-a="togR" data-id="${p.id}" aria-label="${p.ativo === false ? 'Ativar' : 'Inativar'}" title="${p.ativo === false ? 'Ativar' : 'Inativar'}">${p.ativo === false ? '▶' : '⏸'}</button>
+        <button class="ib x w" data-a="delR" data-id="${p.id}" aria-label="Excluir" title="Excluir">✕</button>
+      </div>
+      <div class="muted" style="font-size:12px">${esc([p.email, p.tel].filter(Boolean).join(' · ') || 'Sem contato cadastrado')} · ${ncl} cliente(s) ativo(s)</div>
+      <div class="stats">
+        <div><b>${mine.length}</b><span>TOTAL</span></div>
+        <div><b style="color:#15803d">${n('RECEBIDO')}</b><span>RECEBIDOS</span></div>
+        <div><b style="color:#a16207">${n('PENDENTE')}</b><span>PENDENTES</span></div>
+        <div><b style="color:#b91c1c">${n('ATRASADO')}</b><span>ATRASADOS</span></div>
+      </div>
+      <div><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--mut);margin-bottom:4px"><span>RECEBIMENTO</span><span>${P}%</span></div><div class="bar"><div style="width:${P}%"></div></div></div>
+      ${p.tipo !== 'Comercial' ? `<button class="b sm" style="align-self:flex-start" data-a="verFech" data-v="${esc(p.nome)}">Ver fechamentos →</button>` : ''}
+    </div>`; }).join('')}</div>` : `<div class="empty" style="background:#fff;border-radius:16px;border:1px solid var(--bd)">${S.resp.length ? 'Nenhum responsável corresponde aos filtros.' : 'Nenhum responsável cadastrado.'}</div>`;
+}
+function formResp(p) {
+  const f = p || {id: '', nome: '', tipo: 'Analista', email: '', tel: '', ativo: true};
+  modal(f.id ? 'Editar responsável' : 'Novo responsável', [
+    {k: 'nome', l: 'NOME *', full: true, v: f.nome},
+    {k: 'tipo', l: 'FUNÇÃO', t: 'select', opts: [['Analista', 'Analista'], ['Comercial', 'Comercial'], ['Ambos', 'Analista + Comercial']], v: f.tipo},
+    {k: 'email', l: 'E-MAIL', t: 'email', v: f.email},
+    {k: 'tel', l: 'TELEFONE', t: 'tel', v: f.tel},
+    {k: 'ativo', l: 'Ativo', t: 'checkbox', v: f.ativo !== false}
+  ], async v => {
+    v.nome = v.nome.trim();
+    if (!v.nome) return toast('Informe o nome');
+    if (S.resp.some(x => x.id !== f.id && norm(x.nome) === norm(v.nome))) return toast('Já existe um responsável com este nome');
+    closeModal();
+    let ok;
+    if (f.id) {
+      ok = await put('resp', {...S.resp.find(x => x.id === f.id), ...v});
+      if (ok && f.nome !== v.nome) {   // propaga renomeação
+        const ren = o => ({...o, analista: o.analista === f.nome ? v.nome : o.analista, comercial: o.comercial === f.nome ? v.nome : o.comercial});
+        const hit = o => o.analista === f.nome || o.comercial === f.nome;
+        await putMany('clientes', S.clientes.filter(hit).map(ren));
+        await putMany('recs', S.recs.filter(hit).map(ren));
+        if (S.fa === f.nome) S.fa = v.nome;
+      }
+    } else ok = await put('resp', {...v, id: uid('p')});
+    render(); if (ok) toast('Responsável salvo');
+  });
+}
+
+/* ---------- backup / restauração ---------- */
+async function restoreFrom(o) {
+  if (!o || !Array.isArray(o.recs)) throw new Error('inválido');
+  const d = derive(o.recs, Array.isArray(o.clientes) ? o.clientes : null, Array.isArray(o.resp) ? o.resp : null);
+  let semAnexo = 0;
+  d.recs = d.recs.map(r => { const fs = (r.files || []).filter(f => f.s); semAnexo += (r.files || []).length - fs.length; return {...r, files: fs}; });
+  toast('Importando…', 60000);
+  const {error} = await SB.from(TBL).delete().in('colecao', Object.values(COL));
+  if (error) throw error;
+  S.recs = []; S.clientes = []; S.resp = [];
+  if (!(await putMany('resp', d.resp)) || !(await putMany('clientes', d.cl)) || !(await putMany('recs', d.recs))) throw new Error('falha ao gravar');
+  return semAnexo;
+}
+
+/* ---------- modais ---------- */
+function modal(title, fields, onSave, onChange) {
+  const inp = f => {
+    const a = `class="i" name="${f.k}"${f.ph ? ` placeholder="${esc(f.ph)}"` : ''}${f.min != null ? ` min="${f.min}"` : ''}${f.max != null ? ` max="${f.max}"` : ''}${RO ? ' disabled' : ''}`;
+    if (f.t === 'select') return `<select ${a}>${f.opts.map(([v, l]) => `<option value="${esc(v)}"${String(f.v ?? '') === String(v) ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+    if (f.t === 'textarea') return `<textarea ${a}>${esc(f.v)}</textarea>`;
+    return `<input ${a} type="${f.t || 'text'}" value="${esc(f.v ?? '')}">`;
+  };
+  $('#modal').innerHTML = `<div class="ov" data-a="ovClose"><form class="dlg" role="dialog" aria-modal="true" aria-label="${esc(title)}" novalidate>
+    <h2>${esc(title)}</h2>
+    <div class="fg">${fields.map(f => f.t === 'checkbox'
+      ? `<label class="chk${f.full ? ' full' : ''}"><input type="checkbox" name="${f.k}"${f.v ? ' checked' : ''}${RO ? ' disabled' : ''}>${esc(f.l)}</label>`
+      : `<label class="${f.full ? 'full' : ''}"><span>${esc(f.l)}</span>${inp(f)}${f.hint ? `<span class="hint">${esc(f.hint)}</span>` : ''}</label>`).join('')}</div>
+    <div class="acts"><button type="button" class="b" data-a="close">${RO ? 'Fechar' : 'Cancelar'}</button>${RO ? '' : '<button type="submit" class="b p">Salvar</button>'}</div>
+  </form></div>`;
+  const form = $('#modal form');
+  const get = k => { const el = form.elements[k]; return el.type === 'checkbox' ? el.checked : el.value; };
+  const set = {get, put: (k, v) => { const el = form.elements[k]; if (!el) return; if (el.tagName === 'SELECT' && v && ![...el.options].some(o => o.value === v)) el.add(new Option(v, v)); el.value = v ?? ''; }};
+  if (onChange) form.addEventListener('change', e => e.target.name && onChange(e.target.name, get(e.target.name), set));
+  form.addEventListener('submit', e => { e.preventDefault(); if (RO) return; const v = {}; fields.forEach(f => v[f.k] = get(f.k)); onSave(v); });
+  setTimeout(() => { const el = form.querySelector('input:not([disabled]),select:not([disabled]),textarea:not([disabled])'); el && el.focus(); }, 0);
+}
+function confirmBox(html, btn, danger, ok) {
+  $('#modal').innerHTML = `<div class="ov" data-a="ovClose"><div class="dlg" style="width:440px" role="alertdialog" aria-modal="true"><div style="font-size:14px;line-height:1.5">${html}</div>
+    <div class="acts"><button class="b" data-a="close">Cancelar</button><button class="b ${danger ? 'd' : 'p'}" id="okBtn">${btn}</button></div></div></div>`;
+  $('#okBtn').onclick = () => { closeModal(); ok(); }; $('#okBtn').focus();
+}
+function closeModal() { $('#modal').innerHTML = ''; }
+
+/* ---------- eventos ---------- */
+const byId = (arr, id) => arr.find(x => x.id === id);
+const A = {
+  view: d => { S.view = d.v; render(); window.scrollTo(0, 0); },
+  prev: () => shift(-1), next: () => shift(1),
+  close: closeModal, ovClose: (d, e) => { if (e.target === e.currentTarget) closeModal(); },
+  fa: d => { S.fa = d.v; viewFech(); },
+  exp: d => { S.exp[d.id] = !S.exp[d.id]; listFech(); },
+  sel: (d, e) => { S.sel[d.id] = e.target.checked; const vis = visRecs(); $('#allSel').checked = vis.length > 0 && vis.every(r => S.sel[r.id]); },
+  novoF: () => formFech(), editF: d => formFech(byId(S.recs, d.id)), gerar,
+  rec: async d => { const T = today(); await upd(d.id, x => ({...x, rec: T}), 'Recebimento registrado em ' + fmt(T)); viewFech(); toast('Recebimento registrado'); },
+  unrec: async d => { await upd(d.id, x => ({...x, rec: ''}), 'Recebimento desfeito'); viewFech(); },
+  delF: d => confirmBox('Excluir este fechamento e seus anexos?', 'Excluir', true, async () => { await delRecs([d.id]); render(); }),
+  delSel: () => { const ids = Object.keys(S.sel).filter(k => S.sel[k]); if (!ids.length) return toast('Selecione registros na tabela'); confirmBox(`Excluir ${ids.length} registro(s) selecionado(s)?`, 'Excluir', true, async () => { await delRecs(ids); render(); }); },
+  down: async d => { const r = byId(S.recs, d.id), f = r && (r.files || []).find(x => x.id === d.f); if (!f) return; toast('Preparando ' + f.name + '…', 15000);
+    try { const b = await loadFile(f); if (b) { await dl(f.name, b); toast('Pronto'); } else toast(f.s ? 'Arquivo não encontrado' : 'Este anexo ficou só no computador de quem o enviou'); } catch (e) { toast('Falha ao baixar'); } },
+  rmFile: d => { const r = byId(S.recs, d.id), f = r && (r.files || []).find(x => x.id === d.f); if (!f) return;
+    confirmBox(`Remover o anexo <b>${esc(f.name)}</b>?`, 'Remover', true, async () => { await dropFile(f); await upd(d.id, x => ({...x, files: (x.files || []).filter(y => y.id !== f.id)}), 'Removeu anexo: ' + f.name); listFech(); }); },
+  csvF: () => csv('fechamentos_' + S.comp + '.csv', ['Cliente', 'CDC', 'Analista responsável', 'Responsável comercial', 'Data fechamento', 'Prazo de envio', 'Status', 'Recebimento', 'Observações'], visRecs().map(r => [r.cliente, r.cdc, r.analista, r.comercial, fmt(r.fech), fmt(r.prazo), r.st, fmt(r.rec), r.obs])),
+  backup: () => dl('backup_fechamentos_' + today() + '.json', JSON.stringify({v: 2, recs: S.recs, clientes: S.clientes, resp: S.resp}, null, 1), 'application/json'),
+  restore: () => $('#restoreFile').click(),
+  novoC: () => formCli(), editC: d => formCli(byId(S.clientes, d.id)),
+  togC: async d => { const c = byId(S.clientes, d.id), on = c.ativo === false; if (await put('clientes', {...c, ativo: on})) toast(on ? 'Cliente ativado' : 'Cliente inativado'); render(); },
+  delC: d => { const c = byId(S.clientes, d.id), n = S.recs.filter(r => r.clienteId === c.id).length;
+    confirmBox(`Excluir o cliente <b>${esc(c.nome)}</b>?` + (n ? `<div class="muted" style="margin-top:6px;font-size:12px">Os ${n} fechamento(s) já registrados serão mantidos. Se o cliente só parou de enviar, prefira <b>inativar</b>.</div>` : ''), 'Excluir', true, async () => { await remove('clientes', c.id); render(); }); },
+  csvC: () => csv('clientes.csv', ['Cliente', 'CNPJ', 'CDC', 'Analista responsável', 'Responsável comercial', 'Dia do fechamento', 'Prazo de envio (dias)', 'Contato', 'E-mail', 'Telefone', 'Situação', 'Observações'], S.clientes.slice().sort((a, b) => cmp(a.nome, b.nome)).map(c => [c.nome, c.cnpj, c.cdc, c.analista, c.comercial, c.dia, c.prazoDias, c.contato, c.email, c.tel, c.ativo === false ? 'Inativo' : 'Ativo', c.obs])),
+  novoR: () => formResp(), editR: d => formResp(byId(S.resp, d.id)),
+  togR: async d => { const p = byId(S.resp, d.id); await put('resp', {...p, ativo: p.ativo === false}); render(); },
+  delR: d => { const p = byId(S.resp, d.id), cl = S.clientes.filter(c => c.analista === p.nome || c.comercial === p.nome);
+    confirmBox(`Excluir <b>${esc(p.nome)}</b>?` + (cl.length ? `<div class="muted" style="margin-top:6px;font-size:12px">${cl.length} cliente(s) estão vinculados a este nome e ficarão sem responsável. Fechamentos antigos mantêm o nome no histórico. Para preservar o vínculo, prefira <b>inativar</b>.</div>` : ''), 'Excluir', true, async () => {
+      await remove('resp', p.id);
+      await putMany('clientes', cl.map(c => ({...c, analista: c.analista === p.nome ? '' : c.analista, comercial: c.comercial === p.nome ? '' : c.comercial})));
+      render(); }); },
+  csvR: () => csv('responsaveis.csv', ['Nome', 'Função', 'E-mail', 'Telefone', 'Situação'], S.resp.map(p => [p.nome, p.tipo, p.email, p.tel, p.ativo === false ? 'Inativo' : 'Ativo'])),
+  verFech: d => { S.view = 'fech'; S.fa = d.v; render(); },
+  nome: () => pedirNome()
+};
+function shift(n) { const [y, m] = S.comp.split('-').map(Number), d = new Date(y, m - 1 + n, 1); S.comp = d.getFullYear() + '-' + pad(d.getMonth() + 1); S.sel = {}; render(); }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-a]'); if (!el || el.tagName === 'INPUT' && el.type === 'file') return;
+  const fn = A[el.dataset.a]; if (!fn) return;
+  if (el.dataset.a === 'ovClose') return fn(el.dataset, {target: e.target, currentTarget: el});
+  if (el.type !== 'checkbox') e.preventDefault();
+  fn(el.dataset, e);
+});
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id === 'q') { S.q = e.target.value; listFech(); }
+  if (id === 'cq') { S.cq = e.target.value; listCli(); }
+  if (id === 'rq') { S.rq = e.target.value; listResp(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target, id = t.id;
+  if (id === 'fs') { S.fs = t.value; listFech(); }
+  else if (id === 'cAtivo') { S.cAtivo = t.value; listCli(); }
+  else if (id === 'cAn') { S.cAn = t.value; listCli(); }
+  else if (id === 'rTipo') { S.rTipo = t.value; listResp(); }
+  else if (id === 'mes') { S.comp = S.comp.slice(0, 4) + '-' + t.value; S.sel = {}; render(); }
+  else if (id === 'ano') { const v = parseInt(t.value, 10); if (v >= 2000 && v <= 2100) { S.comp = v + S.comp.slice(4); S.sel = {}; render(); } }
+  else if (id === 'allSel') { visRecs().forEach(r => S.sel[r.id] = t.checked); listFech(); }
+  else if (t.dataset.a === 'files') { const fs = [...t.files]; t.value = ''; addFiles(t.dataset.id, fs); }
+  else if (id === 'restoreFile') {
+    const f = t.files[0]; t.value = ''; if (!f) return;
+    f.text().then(txt => {
+      let o; try { o = JSON.parse(txt); if (!Array.isArray(o.recs)) throw 0; } catch (x) { return toast('Arquivo de backup inválido'); }
+      const nR = o.recs.length, nC = Array.isArray(o.clientes) ? o.clientes.length : null;
+      confirmBox(`Restaurar este backup com <b>${nR}</b> fechamento(s)${nC != null ? ` e <b>${nC}</b> cliente(s)` : ''}?<div class="muted" style="margin-top:6px;font-size:12px">Os dados atuais serão <b>substituídos</b> para todas as pessoas.</div>`, 'Restaurar', true, async () => {
+        try { const semAnexo = await restoreFrom(o); render(); toast('Backup restaurado' + (semAnexo ? ` · ${semAnexo} anexo(s) antigo(s) ficaram só no computador de origem — anexe de novo se precisar` : ''), 7000); }
+        catch (x) { render(); toast('Não foi possível restaurar o backup'); }
+      });
+    });
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').innerHTML) closeModal(); });
+
+/* ---------- inicialização ---------- */
+function pedirNome() {
+  modal('Quem está usando?', [{k: 'n', l: 'SEU NOME', full: true, v: ME || '', hint: 'Aparece no histórico de cada fechamento. Fica salvo só neste navegador.'}], v => {
+    const n = v.n.trim(); if (!n) return toast('Informe seu nome');
+    ME = n.slice(0, 60); lsSet('cf_nome', ME); closeModal(); render();
+  });
+}
+async function carregar() {
+  S.loading = true; render();
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const {data, error} = await SB.from(TBL).select('colecao,id,data').range(from, from + 999);
+    if (error) { $('#main').innerHTML = `<div class="empty">Não foi possível carregar os dados: ${esc(error.message)}</div>`; return; }
+    rows.push(...data); if (data.length < 1000) break;
+  }
+  S.recs = []; S.clientes = []; S.resp = [];
+  rows.forEach(r => { const k = KIND[r.colecao]; if (k) S[k].push({...r.data, id: r.id}); });
+  S.loading = false; render();
+  if (!ME) pedirNome();
+  CH = SB.channel('registros-live')
+    .on('postgres_changes', {event: '*', schema: 'public', table: TBL}, p => {
+      const row = p.eventType === 'DELETE' ? p.old : p.new, k = row && KIND[row.colecao];
+      if (!k) return;
+      S[k] = S[k].filter(x => x.id !== row.id);
+      if (p.eventType !== 'DELETE') S[k].push({...p.new.data, id: p.new.id});
+      softRender();
+    })
+    .subscribe(st => { if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT') toast('Atualização em tempo real indisponível — recarregue a página para ver mudanças.', 8000); });
+}
+function start() {
+  if (!CFG.url || !CFG.anonKey || /COLE_AQUI/.test(CFG.url + CFG.anonKey) || !window.supabase) {
+    $('#main').innerHTML = `<div class="card" style="max-width:560px;margin:40px auto"><b style="color:var(--ink)">Falta configurar o Supabase.</b><div class="muted" style="font-size:13px">Preencha o arquivo <b>config.js</b> com a URL e a chave "anon public" do seu projeto Supabase e publique de novo.</div></div>`;
+    return;
+  }
+  SB = window.supabase.createClient(CFG.url, CFG.anonKey, {auth: {persistSession: false}});
+  ME = lsGet('cf_nome') || null;
+  carregar();
+}
+start();
+})();
+</script>
+</body>
+</html>
