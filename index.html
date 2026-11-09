@@ -271,7 +271,7 @@ function curRecs() { const T = today(); return S.recs.filter(r => r.comp === S.c
 const ORD = {ATRASADO: 0, PENDENTE: 1, RECEBIDO: 2};
 function visRecs() {
   const q = norm(S.q);
-  return curRecs().filter(r => (!q || norm(r.cliente).includes(q) || norm(r.cdc).includes(q)) && (!S.fa || r.analista === S.fa) && (!S.fs || r.st === S.fs) && (!S.fr || (S.fr === '-' ? !r.retro : r.retro === S.fr)))
+  return curRecs().filter(r => (!q || norm(r.cliente).includes(q) || norm(r.cdc).includes(q)) && (!S.fa || r.analista === S.fa) && (!S.fs || r.st === S.fs) && (!S.fr || (S.fr === 'SIM') === (r.retro === 'SIM')))
     .sort((a, b) => (ORD[a.st] - ORD[b.st]) || cmp(a.prazo || '9', b.prazo || '9') || cmp(a.cliente, b.cliente));
 }
 const G_F = '40px minmax(180px,1.5fr) 190px 150px 140px 128px 125px 230px minmax(170px,2fr) 150px';
@@ -295,7 +295,7 @@ function viewFech() {
       ${['', 'RECEBIDO', 'PENDENTE', 'ATRASADO'].map(v => `<option value="${v}"${S.fs === v ? ' selected' : ''}>${v || 'Todos os status'}</option>`).join('')}
     </select>
     <select class="i" id="fr" aria-label="Filtrar por retroativo">
-      ${[['', 'Retroativo: todos'], ['SIM', 'Retroativo: Sim'], ['NAO', 'Retroativo: Não'], ['-', 'Retroativo: não informado']].map(([v, l]) => `<option value="${v}"${S.fr === v ? ' selected' : ''}>${l}</option>`).join('')}
+      ${[['', 'Retroativo: todos'], ['SIM', 'Retroativo: Sim'], ['NAO', 'Retroativo: Não']].map(([v, l]) => `<option value="${v}"${S.fr === v ? ' selected' : ''}>${l}</option>`).join('')}
     </select>
     <div style="display:flex;gap:4px;flex-wrap:wrap">
       ${[''].concat(nomes).map(a => `<button class="b${S.fa === a ? ' on' : ''}" data-a="fa" data-v="${esc(a)}">${esc(a || 'Todos')}</button>`).join('')}
@@ -344,7 +344,7 @@ function listFech() {
       <div class="c">${esc(r.analista || '—')}</div><div class="c">${fmt(r.fech)}</div><div class="c">${fmt(r.prazo)}</div>
       <div style="padding:0 4px"><div class="pill st-${r.st}" title="${late ? late + ' dia(s) de atraso' : ''}">${r.st}${late ? ' · ' + late + 'd' : ''}</div></div>
       <div class="c">${fmt(r.rec)}</div>
-      <div style="padding:0 8px"><select class="rt rt-${r.retro || 'x'}" data-retro="${r.id}" aria-label="Foi calculado o retroativo?"><option value=""${!r.retro ? ' selected' : ''}>Selecione</option><option value="SIM"${r.retro === 'SIM' ? ' selected' : ''}>Sim</option><option value="NAO"${r.retro === 'NAO' ? ' selected' : ''}>Não</option></select></div>
+      <div style="padding:0 8px"><select class="rt rt-${r.retro === 'SIM' ? 'SIM' : 'NAO'}" data-retro="${r.id}" aria-label="Foi calculado o retroativo?"><option value="NAO"${r.retro !== 'SIM' ? ' selected' : ''}>Não</option><option value="SIM"${r.retro === 'SIM' ? ' selected' : ''}>Sim</option></select></div>
       <div class="c muted">${esc(r.obs)}</div>
       <div style="display:flex;gap:4px;padding:0 6px">
         <button class="ib" data-a="exp" data-id="${r.id}" aria-label="Detalhes" title="Detalhes">${S.exp[r.id] ? '▴' : '▾'}</button>
@@ -387,7 +387,7 @@ function formFech(r) {
     {k: 'fech', l: 'DATA DE FECHAMENTO', t: 'date', v: f.fech},
     {k: 'prazo', l: 'PRAZO DE ENVIO', t: 'date', v: f.prazo},
     {k: 'rec', l: 'DATA DE RECEBIMENTO', t: 'date', v: f.rec},
-    {k: 'retro', l: 'FOI CALCULADO O RETROATIVO?', t: 'select', opts: [['', '—'], ['SIM', 'Sim'], ['NAO', 'Não']], v: f.retro || ''},
+    {k: 'retro', l: 'FOI CALCULADO O RETROATIVO?', t: 'select', opts: [['NAO', 'Não'], ['SIM', 'Sim']], v: f.retro === 'SIM' ? 'SIM' : 'NAO'},
     {k: 'obs', l: 'OBSERVAÇÕES', t: 'textarea', full: true, v: f.obs}
   ], async v => {
     const c = S.clientes.find(x => x.id === v.clienteId);
@@ -474,8 +474,7 @@ async function exportPng() {
         const [bg, fg] = PILL[r.st]; rr(cx + 10, cy - 12, w - 24, 24, 6, bg);
         g.fillStyle = fg; g.font = F(700, 11); g.textAlign = 'center'; g.fillText(r.st + (late ? ' · ' + late + 'd' : ''), cx + 10 + (w - 24) / 2, cy + 1); g.textAlign = 'left';
       } else if (j === 6) {
-        if (r.retro) { const [bg, fg] = r.retro === 'SIM' ? ['#d9f2e3', '#15803d'] : ['#fbdcdc', '#b91c1c']; rr(cx + 14, cy - 12, 70, 24, 6, bg); g.fillStyle = fg; g.font = F(700, 12); g.textAlign = 'center'; g.fillText(RETRO[r.retro], cx + 49, cy + 1); g.textAlign = 'left'; }
-        else { g.fillStyle = '#9aaead'; g.font = F(400, 13.5); g.fillText('—', cx + 14, cy + 1); }
+        const sim = r.retro === 'SIM', [bg, fg] = sim ? ['#d9f2e3', '#15803d'] : ['#fbdcdc', '#b91c1c']; rr(cx + 14, cy - 12, 70, 24, 6, bg); g.fillStyle = fg; g.font = F(700, 12); g.textAlign = 'center'; g.fillText(sim ? 'Sim' : 'Não', cx + 49, cy + 1); g.textAlign = 'left';
       } else {
         g.font = j === 0 ? F(600, 13.5) : F(400, 13.5); g.fillStyle = j === 0 ? '#095550' : j === 7 ? '#5b6f6e' : '#1c2b2b';
         g.fillText(fit(vals[j], w - 26), cx + 14, cy + 1);
@@ -692,7 +691,7 @@ const A = {
     try { const b = await loadFile(f); if (b) { await dl(f.name, b); toast('Pronto'); } else toast(f.s ? 'Arquivo não encontrado' : 'Este anexo ficou só no computador de quem o enviou'); } catch (e) { toast('Falha ao baixar'); } },
   rmFile: d => { const r = byId(S.recs, d.id), f = r && (r.files || []).find(x => x.id === d.f); if (!f) return;
     confirmBox(`Remover o anexo <b>${esc(f.name)}</b>?`, 'Remover', true, async () => { await dropFile(f); await upd(d.id, x => ({...x, files: (x.files || []).filter(y => y.id !== f.id)}), 'Removeu anexo: ' + f.name); listFech(); }); },
-  csvF: () => csv('fechamentos_' + S.comp + '.csv', ['Cliente', 'CDC', 'Analista responsável', 'Responsável comercial', 'Data fechamento', 'Prazo de envio', 'Status', 'Recebimento', 'Foi calculado o retroativo?', 'Observações'], visRecs().map(r => [r.cliente, r.cdc, r.analista, r.comercial, fmt(r.fech), fmt(r.prazo), r.st, fmt(r.rec), RETRO[r.retro] || '', r.obs])),
+  csvF: () => csv('fechamentos_' + S.comp + '.csv', ['Cliente', 'CDC', 'Analista responsável', 'Responsável comercial', 'Data fechamento', 'Prazo de envio', 'Status', 'Recebimento', 'Foi calculado o retroativo?', 'Observações'], visRecs().map(r => [r.cliente, r.cdc, r.analista, r.comercial, fmt(r.fech), fmt(r.prazo), r.st, fmt(r.rec), r.retro === 'SIM' ? 'Sim' : 'Não', r.obs])),
   backup: () => dl('backup_fechamentos_' + today() + '.json', JSON.stringify({v: 2, recs: S.recs, clientes: S.clientes, resp: S.resp}, null, 1), 'application/json'),
   restore: () => $('#restoreFile').click(),
   novoC: () => formCli(), editC: d => formCli(byId(S.clientes, d.id)),
@@ -731,7 +730,7 @@ document.addEventListener('change', e => {
   const t = e.target, id = t.id;
   if (id === 'fs') { S.fs = t.value; listFech(); }
   else if (id === 'fr') { S.fr = t.value; listFech(); }
-  else if (t.dataset.retro) { const rid = t.dataset.retro, v = t.value; t.className = 'rt rt-' + (v || 'x'); upd(rid, x => ({...x, retro: v}), 'Retroativo: ' + (RETRO[v] || 'não informado')).then(ok => { if (ok) toast('Retroativo: ' + (RETRO[v] || 'não informado')); }); const kp = $('#kpis'); if (kp) kp.innerHTML = kpisHtml(); }
+  else if (t.dataset.retro) { const rid = t.dataset.retro, v = t.value; t.className = 'rt rt-' + v; upd(rid, x => ({...x, retro: v}), 'Retroativo: ' + RETRO[v]).then(ok => { if (ok) toast('Retroativo: ' + RETRO[v]); }); const kp = $('#kpis'); if (kp) kp.innerHTML = kpisHtml(); }
   else if (id === 'cAtivo') { S.cAtivo = t.value; listCli(); }
   else if (id === 'cAn') { S.cAn = t.value; listCli(); }
   else if (id === 'rTipo') { S.rTipo = t.value; listResp(); }
