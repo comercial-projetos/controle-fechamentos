@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Controle de Fechamentos</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23055550'/%3E%3Cpath d='M32 50 L32 30' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M32 34 C32 22 22 16 14 16 C14 28 22 35 32 34 Z' fill='%235eead4'/%3E%3Cpath d='M32 30 C32 18 42 12 50 12 C50 24 42 31 32 30 Z' fill='%23ffffff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 :root{--pri:#095550;--pri2:#0b6b65;--ink:#0b3b38;--txt:#1c2b2b;--mut:#5b6f6e;--bd:#e2ecea;--bd2:#d5e2e1;--bg:#f2f6f6;--soft:#eef5f4}
@@ -87,6 +86,7 @@ body.ro .w{display:none!important}
 .rt{height:28px;width:100%;max-width:150px;border-radius:6px;border:1px solid var(--bd2);font:600 12px Inter,system-ui,sans-serif;padding:0 6px;cursor:pointer}
 .rt-SIM{background:#d9f2e3;color:#15803d;border-color:#b5e3c6}
 .rt-NAO{background:#fbdcdc;color:#b91c1c;border-color:#f3c0c0}
+.rt-NA{background:#eceff0;color:#4a5f5e;border-color:#d5e2e1}
 .rt-x{background:#fff;color:#6b7f7e}
 .rt option{background:#fff;color:#1c2b2b}
 </style>
@@ -272,13 +272,14 @@ function curRecs() { const T = today(); return S.recs.filter(r => r.comp === S.c
 const ORD = {ATRASADO: 0, PENDENTE: 1, RECEBIDO: 2};
 function visRecs() {
   const q = norm(S.q);
-  return curRecs().filter(r => (!q || norm(r.cliente).includes(q) || norm(r.cdc).includes(q)) && (!S.fa || r.analista === S.fa) && (!S.fs || r.st === S.fs) && (!S.fr || (S.fr === '-' ? !r.retro : r.retro === S.fr)))
+  return curRecs().filter(r => (!q || norm(r.cliente).includes(q) || norm(r.cdc).includes(q)) && (!S.fa || r.analista === S.fa) && (!S.fs || r.st === S.fs) && (!S.fr || rv(r) === S.fr))
     .sort((a, b) => (ORD[a.st] - ORD[b.st]) || cmp(a.prazo || '9', b.prazo || '9') || cmp(a.cliente, b.cliente));
 }
 const G_F = '40px minmax(180px,1.5fr) 190px 150px 140px 128px 125px 230px minmax(170px,2fr) 150px';
-const RETRO = {SIM: 'Sim', NAO: 'Não'};
+const RETRO = {SIM: 'Sim', NAO: 'Não', NA: 'Não se aplica'};
+const rv = r => r.retro === 'SIM' || r.retro === 'NA' ? r.retro : 'NAO';
 function viewFech() {
-  const cur = curRecs(), n = x => cur.filter(r => r.st === x).length, P = cur.length ? Math.round(100 * n('RECEBIDO') / cur.length) : 0, nR = cur.filter(r => r.retro === 'SIM').length;
+  const cur = curRecs(), n = x => cur.filter(r => r.st === x).length, P = cur.length ? Math.round(100 * n('RECEBIDO') / cur.length) : 0, nR = cur.filter(r => r.retro === 'SIM').length, totR = cur.filter(r => r.retro !== 'NA').length;
   const k = (ic, bg, fg, l, v, extra = '') => `<div class="kpi"><div class="ic" style="background:${bg};color:${fg}" aria-hidden="true">${ic}</div><div style="flex:1;min-width:0"><div class="l">${l}</div><div class="v">${v}</div>${extra}</div></div>`;
   const nomes = [...new Set(analistas().concat(cur.map(r => r.analista).filter(Boolean)))].sort(cmp);
   const faltam = S.clientes.filter(c => c.ativo !== false && !S.recs.some(r => r.comp === S.comp && (r.clienteId === c.id || norm(r.cliente) === norm(c.nome)))).length;
@@ -296,7 +297,7 @@ function viewFech() {
       ${['', 'RECEBIDO', 'PENDENTE', 'ATRASADO'].map(v => `<option value="${v}"${S.fs === v ? ' selected' : ''}>${v || 'Todos os status'}</option>`).join('')}
     </select>
     <select class="i" id="fr" aria-label="Filtrar por retroativo">
-      ${[['', 'Retroativo: todos'], ['SIM', 'Retroativo: Sim'], ['NAO', 'Retroativo: Não'], ['-', 'Retroativo: não informado']].map(([v, l]) => `<option value="${v}"${S.fr === v ? ' selected' : ''}>${l}</option>`).join('')}
+      ${[['', 'Retroativo: todos'], ['SIM', 'Retroativo: Sim'], ['NAO', 'Retroativo: Não'], ['NA', 'Retroativo: Não se aplica']].map(([v, l]) => `<option value="${v}"${S.fr === v ? ' selected' : ''}>${l}</option>`).join('')}
     </select>
     <div style="display:flex;gap:4px;flex-wrap:wrap">
       ${[''].concat(nomes).map(a => `<button class="b${S.fa === a ? ' on' : ''}" data-a="fa" data-v="${esc(a)}">${esc(a || 'Todos')}</button>`).join('')}
@@ -319,7 +320,7 @@ function viewFech() {
   listFech();
 }
 function kpisHtml() {
-  const cur = curRecs(), n = x => cur.filter(r => r.st === x).length, P = cur.length ? Math.round(100 * n('RECEBIDO') / cur.length) : 0, nR = cur.filter(r => r.retro === 'SIM').length;
+  const cur = curRecs(), n = x => cur.filter(r => r.st === x).length, P = cur.length ? Math.round(100 * n('RECEBIDO') / cur.length) : 0, nR = cur.filter(r => r.retro === 'SIM').length, totR = cur.filter(r => r.retro !== 'NA').length;
   const k = (ic, bg, fg, l, v, extra = '') => `<div class="kpi"><div class="ic" style="background:${bg};color:${fg}" aria-hidden="true">${ic}</div><div style="flex:1;min-width:0"><div class="l">${l}</div><div class="v">${v}</div>${extra}</div></div>`;
   return `
     ${k('≡', '#dcefed', '#095550', 'TOTAL DE FECHAMENTOS', cur.length)}
@@ -327,7 +328,7 @@ function kpisHtml() {
     ${k('…', '#fbefc8', '#a16207', 'PENDENTES', n('PENDENTE'))}
     ${k('!', '#fbdcdc', '#b91c1c', 'ATRASADOS', n('ATRASADO'))}
     ${k('%', '#dcefed', '#095550', '% RECEBIMENTO', P + '<span style="font-size:18px">%</span>', `<div class="bar" style="margin-top:6px"><div style="width:${P}%"></div></div>`)}
-    ${k('↺', '#e4e9fb', '#3b5bdb', 'RETROATIVOS CALCULADOS', nR + '<span style="font-size:18px;color:#5b6f6e">/' + cur.length + '</span>', `<div class="bar" style="margin-top:6px"><div style="width:${cur.length ? Math.round(100 * nR / cur.length) : 0}%;background:#3b5bdb"></div></div>`)}
+    ${k('↺', '#e4e9fb', '#3b5bdb', 'RETROATIVOS CALCULADOS', nR + '<span style="font-size:18px;color:#5b6f6e">/' + totR + '</span>', `<div class="bar" style="margin-top:6px"><div style="width:${totR ? Math.round(100 * nR / totR) : 0}%;background:#3b5bdb"></div></div>`)}
   `;
 }
 function listFech() {
@@ -345,7 +346,7 @@ function listFech() {
       <div class="c">${esc(r.analista || '—')}</div><div class="c">${fmt(r.fech)}</div><div class="c">${fmt(r.prazo)}</div>
       <div style="padding:0 4px"><div class="pill st-${r.st}" title="${late ? late + ' dia(s) de atraso' : ''}">${r.st}${late ? ' · ' + late + 'd' : ''}</div></div>
       <div class="c">${fmt(r.rec)}</div>
-      <div style="padding:0 8px"><select class="rt rt-${r.retro || 'x'}" data-retro="${r.id}" aria-label="Foi calculado o retroativo?"><option value=""${!r.retro ? ' selected' : ''}>Selecione</option><option value="SIM"${r.retro === 'SIM' ? ' selected' : ''}>Sim</option><option value="NAO"${r.retro === 'NAO' ? ' selected' : ''}>Não</option></select></div>
+      <div style="padding:0 8px"><select class="rt rt-${rv(r)}" data-retro="${r.id}" aria-label="Foi calculado o retroativo?">${['NAO', 'SIM', 'NA'].map(v => `<option value="${v}"${rv(r) === v ? ' selected' : ''}>${RETRO[v]}</option>`).join('')}</select></div>
       <div class="c muted">${esc(r.obs)}</div>
       <div style="display:flex;gap:4px;padding:0 6px">
         <button class="ib" data-a="exp" data-id="${r.id}" aria-label="Detalhes" title="Detalhes">${S.exp[r.id] ? '▴' : '▾'}</button>
@@ -388,7 +389,7 @@ function formFech(r) {
     {k: 'fech', l: 'DATA DE FECHAMENTO', t: 'date', v: f.fech},
     {k: 'prazo', l: 'PRAZO DE ENVIO', t: 'date', v: f.prazo},
     {k: 'rec', l: 'DATA DE RECEBIMENTO', t: 'date', v: f.rec},
-    {k: 'retro', l: 'FOI CALCULADO O RETROATIVO?', t: 'select', opts: [['', '—'], ['SIM', 'Sim'], ['NAO', 'Não']], v: f.retro || ''},
+    {k: 'retro', l: 'FOI CALCULADO O RETROATIVO?', t: 'select', opts: [['NAO', 'Não'], ['SIM', 'Sim'], ['NA', 'Não se aplica']], v: rv(f)},
     {k: 'obs', l: 'OBSERVAÇÕES', t: 'textarea', full: true, v: f.obs}
   ], async v => {
     const c = S.clientes.find(x => x.id === v.clienteId);
@@ -453,7 +454,7 @@ async function exportPng() {
   g.fillText('Competência ' + MESES[+S.comp.slice(5) - 1] + '/' + S.comp.slice(0, 4) + (filtros ? '  ·  ' + filtros : ''), PADX + 58, 64);
   g.textAlign = 'right'; g.font = F(400, 12); g.fillText('Gerado em ' + new Date().toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'}), W - PADX, 42);
   // resumo
-  const kp = [['TOTAL', cur.length, '#0b3b38'], ['RECEBIDOS', n('RECEBIDO'), '#15803d'], ['PENDENTES', n('PENDENTE'), '#a16207'], ['ATRASADOS', n('ATRASADO'), '#b91c1c'], ['% RECEBIMENTO', P + '%', '#095550'], ['RETROATIVOS CALCULADOS', cur.filter(r => r.retro === 'SIM').length + '/' + cur.length, '#3b5bdb']];
+  const kp = [['TOTAL', cur.length, '#0b3b38'], ['RECEBIDOS', n('RECEBIDO'), '#15803d'], ['PENDENTES', n('PENDENTE'), '#a16207'], ['ATRASADOS', n('ATRASADO'), '#b91c1c'], ['% RECEBIMENTO', P + '%', '#095550'], ['RETROATIVOS CALCULADOS', cur.filter(r => r.retro === 'SIM').length + '/' + cur.filter(r => r.retro !== 'NA').length, '#3b5bdb']];
   const kw = (W - PADX * 2 - (kp.length - 1) * 12) / kp.length;
   kp.forEach(([l, v, c], i) => { const x = PADX + i * (kw + 12); rr(x, 88, kw, 46, 8, '#fff'); g.textAlign = 'left'; g.fillStyle = '#5b6f6e'; g.font = F(600, 11); g.fillText(l, x + 16, 111); g.textAlign = 'right'; g.fillStyle = c; g.font = F(700, 22); g.fillText(String(v), x + kw - 16, 112); });
   // tabela
@@ -475,8 +476,7 @@ async function exportPng() {
         const [bg, fg] = PILL[r.st]; rr(cx + 10, cy - 12, w - 24, 24, 6, bg);
         g.fillStyle = fg; g.font = F(700, 11); g.textAlign = 'center'; g.fillText(r.st + (late ? ' · ' + late + 'd' : ''), cx + 10 + (w - 24) / 2, cy + 1); g.textAlign = 'left';
       } else if (j === 6) {
-        if (r.retro) { const [bg, fg] = r.retro === 'SIM' ? ['#d9f2e3', '#15803d'] : ['#fbdcdc', '#b91c1c']; rr(cx + 14, cy - 12, 70, 24, 6, bg); g.fillStyle = fg; g.font = F(700, 12); g.textAlign = 'center'; g.fillText(RETRO[r.retro], cx + 49, cy + 1); g.textAlign = 'left'; }
-        else { g.fillStyle = '#9aaead'; g.font = F(400, 13.5); g.fillText('—', cx + 14, cy + 1); }
+        const v = rv(r), [bg, fg] = {SIM: ['#d9f2e3', '#15803d'], NAO: ['#fbdcdc', '#b91c1c'], NA: ['#eceff0', '#5b6f6e']}[v], pw = v === 'NA' ? 110 : 70; rr(cx + 14, cy - 12, pw, 24, 6, bg); g.fillStyle = fg; g.font = F(700, 12); g.textAlign = 'center'; g.fillText(RETRO[v], cx + 14 + pw / 2, cy + 1); g.textAlign = 'left';
       } else {
         g.font = j === 0 ? F(600, 13.5) : F(400, 13.5); g.fillStyle = j === 0 ? '#095550' : j === 7 ? '#5b6f6e' : '#1c2b2b';
         g.fillText(fit(vals[j], w - 26), cx + 14, cy + 1);
@@ -693,7 +693,7 @@ const A = {
     try { const b = await loadFile(f); if (b) { await dl(f.name, b); toast('Pronto'); } else toast(f.s ? 'Arquivo não encontrado' : 'Este anexo ficou só no computador de quem o enviou'); } catch (e) { toast('Falha ao baixar'); } },
   rmFile: d => { const r = byId(S.recs, d.id), f = r && (r.files || []).find(x => x.id === d.f); if (!f) return;
     confirmBox(`Remover o anexo <b>${esc(f.name)}</b>?`, 'Remover', true, async () => { await dropFile(f); await upd(d.id, x => ({...x, files: (x.files || []).filter(y => y.id !== f.id)}), 'Removeu anexo: ' + f.name); listFech(); }); },
-  csvF: () => csv('fechamentos_' + S.comp + '.csv', ['Cliente', 'CDC', 'Analista responsável', 'Responsável comercial', 'Data fechamento', 'Prazo de envio', 'Status', 'Recebimento', 'Foi calculado o retroativo?', 'Observações'], visRecs().map(r => [r.cliente, r.cdc, r.analista, r.comercial, fmt(r.fech), fmt(r.prazo), r.st, fmt(r.rec), RETRO[r.retro] || '', r.obs])),
+  csvF: () => csv('fechamentos_' + S.comp + '.csv', ['Cliente', 'CDC', 'Analista responsável', 'Responsável comercial', 'Data fechamento', 'Prazo de envio', 'Status', 'Recebimento', 'Foi calculado o retroativo?', 'Observações'], visRecs().map(r => [r.cliente, r.cdc, r.analista, r.comercial, fmt(r.fech), fmt(r.prazo), r.st, fmt(r.rec), RETRO[rv(r)], r.obs])),
   backup: () => dl('backup_fechamentos_' + today() + '.json', JSON.stringify({v: 2, recs: S.recs, clientes: S.clientes, resp: S.resp}, null, 1), 'application/json'),
   restore: () => $('#restoreFile').click(),
   novoC: () => formCli(), editC: d => formCli(byId(S.clientes, d.id)),
@@ -732,7 +732,7 @@ document.addEventListener('change', e => {
   const t = e.target, id = t.id;
   if (id === 'fs') { S.fs = t.value; listFech(); }
   else if (id === 'fr') { S.fr = t.value; listFech(); }
-  else if (t.dataset.retro) { const rid = t.dataset.retro, v = t.value; t.className = 'rt rt-' + (v || 'x'); upd(rid, x => ({...x, retro: v}), 'Retroativo: ' + (RETRO[v] || 'não informado')).then(ok => { if (ok) toast('Retroativo: ' + (RETRO[v] || 'não informado')); }); const kp = $('#kpis'); if (kp) kp.innerHTML = kpisHtml(); }
+  else if (t.dataset.retro) { const rid = t.dataset.retro, v = t.value; t.className = 'rt rt-' + v; upd(rid, x => ({...x, retro: v}), 'Retroativo: ' + RETRO[v]).then(ok => { if (ok) toast('Retroativo: ' + RETRO[v]); }); const kp = $('#kpis'); if (kp) kp.innerHTML = kpisHtml(); }
   else if (id === 'cAtivo') { S.cAtivo = t.value; listCli(); }
   else if (id === 'cAn') { S.cAn = t.value; listCli(); }
   else if (id === 'rTipo') { S.rTipo = t.value; listResp(); }
